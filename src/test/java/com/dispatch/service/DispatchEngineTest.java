@@ -14,9 +14,7 @@ public class DispatchEngineTest {
     private DispatchEngine engine;
 
     @BeforeEach
-    public void setup() {
-        engine = new DispatchEngine();
-    }
+    public void setup() { engine = new DispatchEngine(); }
 
     private Ambulance ambulance(String id, AmbulanceType type, double x, double y) {
         return new Ambulance(id, type, "Driver-" + id, x, y);
@@ -31,6 +29,7 @@ public class DispatchEngineTest {
         engine.registerAmbulance(ambulance("B1", AmbulanceType.BASIC, 0, 0));
         engine.registerAmbulance(ambulance("A1", AmbulanceType.ADVANCED_LIFE_SUPPORT, 10, 10));
         engine.registerAmbulance(ambulance("I1", AmbulanceType.ICU, 20, 20));
+        engine.registerAmbulance(ambulance("B2", AmbulanceType.BASIC, 50, 50));
 
         EmergencyRequest critical = request("P1", EmergencyPriority.CRITICAL, 20, 20);
         EmergencyRequest high = request("P2", EmergencyPriority.HIGH, 10, 10);
@@ -53,10 +52,8 @@ public class DispatchEngineTest {
         engine.registerAmbulance(ambulance("B1", AmbulanceType.BASIC, 0, 0));
         EmergencyRequest normal = request("P1", EmergencyPriority.NORMAL, 1, 1);
         EmergencyRequest critical = request("P2", EmergencyPriority.CRITICAL, 5, 5);
-
         engine.submitEmergencyRequest(normal);
         engine.submitEmergencyRequest(critical);
-
         assertEquals(EmergencyStatus.DISPATCHED, normal.getEmergencyStatus());
         assertEquals(EmergencyStatus.AVAILABLE, critical.getEmergencyStatus());
         assertEquals("P2", engine.getWaitingQueue().peek().getPatientId());
@@ -66,23 +63,19 @@ public class DispatchEngineTest {
     public void testNearestCompatibleAmbulanceIsSelected() {
         engine.registerAmbulance(ambulance("FAR", AmbulanceType.BASIC, 10, 10));
         engine.registerAmbulance(ambulance("NEAR", AmbulanceType.BASIC, 1, 1));
-
         EmergencyRequest r = request("P1", EmergencyPriority.NORMAL, 2, 2);
         engine.submitEmergencyRequest(r);
-
         assertEquals("NEAR", r.getAmbulanceId());
-        assertEquals(1.0, r.getEstimatedDistance(), 0.0001);
-        assertEquals(1.2, r.getEstimatedArrivalTimeMinutes(), 0.0001);
+        assertEquals(Math.sqrt(2), r.getEstimatedDistance(), 0.0001);
+        assertEquals(Math.sqrt(2) * 1.2, r.getEstimatedArrivalTimeMinutes(), 0.0001);
     }
 
     @Test
     public void testCriticalRequiresIcuAmbulance() {
         engine.registerAmbulance(ambulance("B1", AmbulanceType.BASIC, 0, 0));
         engine.registerAmbulance(ambulance("A1", AmbulanceType.ADVANCED_LIFE_SUPPORT, 0, 0));
-
         EmergencyRequest r = request("P1", EmergencyPriority.CRITICAL, 0, 0);
         engine.submitEmergencyRequest(r);
-
         assertNull(r.getAmbulanceId());
         assertEquals(1, engine.getWaitingQueue().size());
     }
@@ -101,10 +94,8 @@ public class DispatchEngineTest {
         engine.registerAmbulance(a);
         EmergencyRequest first = request("P1", EmergencyPriority.NORMAL, 0, 0);
         EmergencyRequest second = request("P2", EmergencyPriority.NORMAL, 0, 0);
-
         engine.submitEmergencyRequest(first);
         engine.submitEmergencyRequest(second);
-
         assertEquals("B1", first.getAmbulanceId());
         assertNull(second.getAmbulanceId());
         assertEquals(1, engine.getWaitingQueue().size());
@@ -116,9 +107,7 @@ public class DispatchEngineTest {
         EmergencyRequest r = request("P1", EmergencyPriority.NORMAL, 2, 2);
         engine.submitEmergencyRequest(r);
         assertEquals(1, engine.getWaitingQueue().size());
-
         engine.registerAmbulance(ambulance("B1", AmbulanceType.BASIC, 2, 2));
-
         assertEquals("B1", r.getAmbulanceId());
         assertEquals(EmergencyStatus.DISPATCHED, r.getEmergencyStatus());
         assertEquals(0, engine.getWaitingQueue().size());
@@ -130,7 +119,6 @@ public class DispatchEngineTest {
         engine.registerAmbulance(a);
         EmergencyRequest r = request("P1", EmergencyPriority.NORMAL, 1, 1);
         engine.submitEmergencyRequest(r);
-
         assertEquals(EmergencyStatus.DISPATCHED, r.getEmergencyStatus());
         engine.transitionAmbulanceState("B1", EmergencyStatus.EN_ROUTE, 0.5, 0.5);
         assertEquals(EmergencyStatus.EN_ROUTE, r.getEmergencyStatus());
@@ -146,7 +134,6 @@ public class DispatchEngineTest {
         engine.registerAmbulance(ambulance("B1", AmbulanceType.BASIC, 0, 0));
         EmergencyRequest r = request("P1", EmergencyPriority.NORMAL, 0, 0);
         engine.submitEmergencyRequest(r);
-
         assertThrows(IllegalStateException.class, () ->
                 engine.transitionAmbulanceState("B1", EmergencyStatus.HOSPITAL_ARRIVED, 0, 0));
     }
@@ -199,7 +186,6 @@ public class DispatchEngineTest {
         EmergencyRequest r2 = request("P2", EmergencyPriority.MODERATE, 1, 1);
         engine.submitEmergencyRequest(r1);
         engine.submitEmergencyRequest(r2);
-
         List<EmergencyRequest> history = engine.getEmergencyHistory();
         assertEquals(2, history.size());
         assertEquals("P1", history.get(0).getPatientId());
