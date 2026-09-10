@@ -1,0 +1,8 @@
+com\dispatch\service\DispatchEngine.class
+com\dispatch\exception\InvalidEmergencyRequestException.class
+com\dispatch\model\EmergencyPriority.class
+com\dispatch\model\AmbulanceType.class
+com\dispatch\model\Ambulance.class
+com\dispatch\exception\AmbulanceUnavailableException.class
+com\dispatch\model\EmergencyStatus.class
+com\dispatch\model\EmergencyRequest.class
